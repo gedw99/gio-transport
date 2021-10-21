@@ -135,3 +135,11 @@ https://github.com/9glt/go-websockets-to-tcp-proxy provides Websockets proxy
 
 
 
+## GIO WebView
+
+We need to use a webview if we want to open the Caddy Potal Auth from the GIO GUI Web, Desktop and Mobile.
+
+https://github.com/Inkeliz will do this. 
+- It does not have full support for Mac and IOS yet.  The include for Mac is there at https://github.com/Inkeliz/gowebview/blob/master/libs/libwebview.dylib, but no main loader yet for it.
+
+
