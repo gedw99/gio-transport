@@ -21,7 +21,7 @@ Linking up GIOUI with NATS provides the following:
 - NATS support canary deploys, gradual deploys, traffic shaping or more
 - NATS, being subject and interest based, does not need any additional infrastructure for service discovery
 
-Caddy provides the followng:
+Caddy provides the following:
 
 - Virtual hosting of the GIO GUI WASM and Golang Servers ( where you can adn any game logic you need for example)
 
@@ -33,11 +33,11 @@ Caddy provides the followng:
 
 ## How ?
 
-The following ideass are to be explored, to see what is the best and easiest approach:
+The following ideas are to be explored, to see what is the best and easiest approach:
 
-1. Pointstar websockets might work jsut fien with the NATS Websockets, without any caddy.
+1. Pointstar websockets might work with the NATS Websockets, without any caddy.
 
-In Pointstar what we dont know yet is if the https://github.com/nhooyr/websocket client websockets are compatible with the  https://github.com/nats-io/nats.go/blob/main/ws.go web sockets server. This is the first thing to try !!
+In Pointstar what we dont know yet if the https://github.com/nhooyr/websocket client websockets are compatible with the  https://github.com/nats-io/nats.go/blob/main/ws.go web sockets server. This is the first thing to try !!
 
 2. Integration of Caddy Auth with NATS Auth. 
 
