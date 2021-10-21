@@ -20,7 +20,7 @@ GIO_SRC_FSPATH=?FILEPATH?/$(GIO_SRC_NAME)
 # Constant variables
 GIO_BUILD_FSNAME=giobuild
 
-_GIO_TEMPLATE_FILE_SERVER_DEBUG=default
+_GIO_TEMPLATE_FILE_SERVER_DEBUG=Caddyfile-file-server-debug
 
 # Computed variables
 GIO_BUILD_FSPATH=$(GIO_SRC_FSPATH)/giobuild
@@ -120,7 +120,7 @@ gio-web-run:
 	@echo "Deprecated. Use Caddy Instead"
 	exit 1
 	#cd $(GIO_SRC_FSPATH) && go generate ./...
-	#cd $(GIO_SRC_FSPATH)/$(GIO_BUILD_WEB_PATH) ?
+	cd $(GIO_SRC_FSPATH)/$(GIO_BUILD_WEB_PATH) ?
 
 ## Depreciated
 gio-web-watch:
@@ -146,7 +146,7 @@ gio-desk-mac-pack-init:
 	# //go:generate mkdir -p example.app/Contents/MacOS
 	# //go:generate go build -o example.app/Contents/MacOS/example
 	# //go:generate codesign -s - example.app
-	# TODO: Same for Windows
+	# TODO: Samue for Windows
 
 	cd $(GIO_SRC_FSPATH) && mkdir -p $(GIO_PACK_DARWIN_FSPATH).app/Contents/MacOS
 	cd $(GIO_SRC_FSPATH) && mkdir -p $(GIO_PACK_DARWIN_FSPATH).app/Contents/MacOS/$(GIO_SRC_NAME)
