@@ -153,7 +153,7 @@ git-add:
 
 ## git commit changes, to commit all staged changes.
 GIT_COMMENT=?
-git-commmit:
+git-commit:
 	cd $(GIT_REPO_FSPATH) && $(GIT_BIN) commit -m '$(GIT_COMMENT)'
 	cd $(GIT_REPO_FSPATH) && $(GIT_BIN) status
 
