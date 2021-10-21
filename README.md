@@ -7,13 +7,8 @@ The GUI Client has a simple example game that uses web sockets, in order to act 
 
 NATS provides 2 ways to connect that we need to account for.
 
-- TCP for naive client like GIO Desktop and GIO Mobile.
-- WebSockets for web client liek GIO WASM.
-
-
-
-
-
+- TCP for naive client such as GIO Desktop and GIO Mobile.
+- WebSockets for web client such as GIO WASM.
 
 ## Why ?
 
