@@ -29,16 +29,14 @@ CADDY_SRC_FSPATH=$(PWD)
 FLY_APP=gedw99-gio-example.pointstar
 
 dep-os:
-	# assume you have golang installed
 	$(MAKE) go-dep
-
 	$(MAKE) gio-dep
 	$(MAKE) caddy-dep
 
 ## GO modules ops ...
 
-mod-update:
-	$(MAKE) go-mod-update
+mod-upgrade:
+	$(MAKE) go-mod-upgrade
 mod-tidy:
 	$(MAKE) go-mod-tidy
 
