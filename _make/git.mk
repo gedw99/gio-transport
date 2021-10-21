@@ -134,6 +134,12 @@ git-version-print:
 
 ### OPERATIONS ###
 
+## git pull from origin, to get changes I have made.
+git-pull-origin:
+	cd $(GIT_REPO_FSPATH) && $(GIT_BIN) fetch origin
+
+	cd $(GIT_REPO_FSPATH) && $(GIT_BIN) merge origin/$(GIT_BRANCH)
+
 ## git pull from upstream, to get changes others have made.
 git-pull-upstream:
 	cd $(GIT_REPO_FSPATH) && $(GIT_BIN) fetch upstream
