@@ -19,7 +19,7 @@ include $(MAKE_FSPATH)/gio.mk
 include $(MAKE_FSPATH)/caddy.mk
 
 GO_SRC_NAME=$(LIB_NAME)
-GO_SRC_FSPATH=$(PWD)/$(LIB_NAME)/$(GO_SRC_NAME)
+GO_SRC_FSPATH=$(PWD)/$(GO_SRC_NAME)
 
 GIO_SRC_NAME=client
 GIO_SRC_FSPATH=$(PWD)/$(LIB_NAME)/$(GIO_SRC_NAME)
@@ -30,7 +30,7 @@ FLY_APP=gedw99-gio-example.pointstar
 
 dep-os:
 	# assume you have golang installed
-	#$(MAKE) go-dep
+	$(MAKE) go-dep
 
 	$(MAKE) gio-dep
 	$(MAKE) caddy-dep
