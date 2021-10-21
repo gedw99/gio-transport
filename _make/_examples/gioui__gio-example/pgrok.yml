@@ -1,0 +1,10 @@
+authtoken: 4nq9771bPxe8ctg7LKr_2ClH7Y15Zqe4bWLWF9p
+tunnels:
+  app-foo:
+    addr: 80
+    proto: http
+    host_header: app-foo.dev
+  app-bar:
+    addr: 80
+    proto: http
+    host_header: app-bar.dev
