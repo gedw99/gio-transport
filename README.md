@@ -1,140 +1,160 @@
 # gio-transport
 
-This is a project that has a GIOUI golang client that uses websockets and a  NATS Serves, with the communication between them using the NATS Protocol.
+This is an exploration of ways we can create reusable transports for gio ( golang gui ) and non golang gui with Golang Server infrastructure.
 
 
-The GUI Client has a simple example game that uses web sockets, in order to act as a Test Harness.
+Transport and Bus are heavily related because as highlighed below we need to run anywhere which leads to needing to send messages inside, across and between process boundaries. 
 
-NATS provides 2 ways to connect that we need to account for.
-
-- TCP for naive client such as GIO Desktop and GIO Mobile.
-- WebSockets for web client such as GIO WASM.
-
-## Why ?
-
-Linking up GIOUI with NATS provides the following:
-
-- Load balancing is free with no additional components like load balancers
-- Failover is free with no additional components like load balancers
-- Geo failover and fallback is free with no additional components like global dns
-- Long running connections are used for microservices speeding up connection handling
-- NATS support canary deploys, gradual deploys, traffic shaping or more
-- NATS, being subject and interest based, does not need any additional infrastructure for service discovery
-
-Caddy provides the following:
-
-- Virtual hosting of the GIO GUI WASM and Golang Servers ( where you can adn any game logic you need for example)
-
-- Auth and Authz using Caddy Portal ( see below ) to any virtual hosts
-
-- Proxying of the HTTP and Web socket connections between Clients ( such as the GIO GUI) and NATS Server. Note that the NATS Server can be embedded in any Golang Server or can be run standalone.
-
-- Proxying of the HTTP and Web socket connections between Clients ( such as the GIO GUI) and Servers such as the Goalng Servers. In this case the PointStar Server. 
-
-## How ?
-
-The following ideas are to be explored, to see what is the best and easiest approach:
-
-1. Pointstar websockets might work with the NATS Websockets, without any caddy.
-
-In Pointstar what we dont know yet if the https://github.com/nhooyr/websocket client websockets are compatible with the  https://github.com/nats-io/nats.go/blob/main/ws.go web sockets server. This is the first thing to try !!
-
-2. Integration of Caddy Auth with NATS Auth. 
-
-In PointStar, the user logs in using GIO, and there is no Auth enforcement. NATS can create users and accounts ( accounts are like roles btw ), and so since we use NATS for all communications, we shoudl try out using Caddy Auth with NATS Auth. The details of this are explained below.
-
-3. Integration of Caddy and NATS HTTP and WebSockets 
-
-By incorporating this a the Caddy level, all golang GUI and Goalng Servers get this for free, and so do not need to explicitly handle it in their own code. 
-Its also a natural thing to do once you get Point 2 ( above ) working.
+The initial proposal is here: https://github.com/gedw99/gio-proposals/blob/e1669bda78d4147dea6ad28a521d94f12e6dc62d/modularity/README.md#bus
 
 
-## _make folder
+## Problem space.
 
-This folder has all the different makefiles needed to run golang, gio, caddy, and a few other things.  
+A GUI system wants to be fast and as such it needs to not get blocked by calls to the IO computation.
 
-Its all designed to be reusable.
+Golang routines and TinyGo ( via LLVM ) compilation dont work, because  WASM threading is not mature enough to parse golang coroutines into WASM threads. So i personally feel that a formal foreground and background ( web workers and or service workers ) is the required solution and hence why a BUS is required. 
 
-TODO: adjsut them to work for Linux ( for Mindaugas), and Windows.
 
-**Examples:**
+GIO supports Web, Desktop, Mobile and Apple TV.  This Web Workers pattern, if formalsied into a API,  can be reused for Web and Non Web ( Desktop and Mobile ) GUI. Thus providing Developers a runtime agnostic system.
 
-To inspect the setup of your root makefile:
+Current state of Art is git.sr.ht/~gioverse/skel, whcih provides a scheduler.
+- Example: https://github.com/npillmayer/giocomp
+  - https://github.com/npillmayer/giocomp/blob/main/components/comp.go#L9 is a reusable Component type.
 
-``` make go-print ``` tells you the gio setup
+## Solution
 
-``` make gio-print ``` tells you the gio setup
+A Type structure is needed to describe the Messages and API.
 
-``` make caddy-print ``` for example tells you the caddy setup
+A Bus is needed that can move the messages.
+
+Along with the Bus, you need Transport or Bridges to abstract that bus over the different Process boundaries / Servers.
+
+## Scope of Runtimes environment and Languages
+
+A protobuf is a nice language agnostic basis. 
+- Its transport independent so we can use it in Client <--> Client, Client <--> Server and Server <--> Server scenarios.
+- Its language independent, so we can support any language ( JS, GO, RUST, Java) 
+- Importantly it provides Schema Evolution, so that a change to the Types that the Bus uses does not break consumers of the Bus.
+
+
+
+## Topologies
+
+So we have a bus at each topology level: 
+
+- Client <--> Client
+
+- Client <--> Server
+
+- Server <--> Server
+
+### Client <--> Client
+
+Is useful for Modularity in that you can send a message to another package that you have no knowldge of. Its designed for decoupling of Application to allow reuse and hence Modularity. 
+
+The Web Service worker patterns uses of Message Passing ( https://developer.mozilla.org/en-US/docs/Web/API/Client/postMessage ) could provide compile target agnostics , allowing this bus feature to work cross platform on Web and NON Web runtime targets.
+
+The Web Worker pattern is is the process isolation boundary ( https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API ) and describes where the background prcoess runs. You can use this with or with Service Workers. 
+
+The Service Workers ( a architype of Web Workers are relevant because they provide a Proxy to the Server for data storage, caching and A2HS ( https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Add_to_home_screen ) providing the ability to install Web apps and offline first class apps onto Desktops and Mobiles. 
+
+So you can see how the message passing bus needs to accomodate this Client <--> topology for Webworkers and Service Workers.
+
+
+--- 
+
+### Client <--> Server
+
+Using various protocols, is designed to provide a generic pattern for Unidirectional messge push in a decoupled and modular way, allowing maximum reuse and developer productivity. In so doing it would provide compile target agnostics to this feature.
+
+Examples:
+
+https://git.sr.ht/~whereswaldon/pointstar/tree/master/item/client/url.go
+- a nice simple example using websockets for passing data betwene a GUI Web and NON Web GUI and a Golang Server using websockets, without a formal bus. 
+
+https://centrifugal.dev/docs/transports/overview
+- Transpots under consideration: GRPC, SSE, HTTP Streaming, GRPC, NATS
+- Just really an example of possible transports. 
 
 ---
 
-To install any dependencies and templates:
+### Server <--> Server
 
-``` make gio-dep ``` sets up gio tooling for cross compiling to WASM, Desktop and Mobile.
+Using various protocols, is designed to provide a generic way to pass messages between any server process.
 
-``` make caddy-dep ``` sets up caddy tooling and templates, so you can run under HTTPS locally to have a proper environment.
+Runtimes are WASI, and OS Native.
 
-## whereswaldon__pointstar folder
+Examples:
 
-A GIO game that uses websockets and runs on Web, Desktop and Mobile.
+Cloud events is a vendor neutral approach. 
 
-Make file is setup to use the makefile in the **_make** folder.
+---
 
-The aim is to get this working with NAST with no changes.
+### Server <--> Server && Server <--> Client && Client <--> Client
 
-## Caddy
+Combines all these topolgies to connect together in a seamless way. 
 
-We can use caddy to perform:
+Examples:
 
-- Auth and authz
-- proxy the nats connection
+NATS BUS with Siot: https://github.com/simpleiot/simpleiot/search?q=nats
 
-
-## Caddy Auth
-
-https://github.com/jaysonsantos/caddy-with-auth imports :
-
-```
-_ "github.com/greenpau/caddy-auth-jwt"
-_ "github.com/greenpau/caddy-auth-portal"
-```
-
-This provides the auth and authz asepcts for http, and potentially nats.
-
-We can embed a gio webview, so that we can load the Caddy Auth GUI inside the GIO app, to allow the user to login.
-
-**Flow**
-
-1. Caddy will see the call from the client to the Server
-
-2. It will see if the header have a NATS jwt token
-
-3. If will check the token against nats
-
-4. If the token and nats operation are ok it will then proxy a web socket connection between the two.
-
-4. If the auth / authz fails it will force the auth gui to open , so that the user can login.
-
-5. TODO ....
+## Uses Cases
 
 
+1. Typescript and go (wasm) for web 
 
-## Caddy NATS
+- SO GUI developers can use Typescript ( next.js, React ) with the Golang ( WASM ) handling logic, IO, storage.
+- Example: Golang WASM and typescript interoperating over the "vmware transport bridge"
+  - https://github.com/vmware/transport-go/pull/46
+  - Libs:
+    - https://github.com/vmware/transport-go
+    - https://github.com/vmware/transport-typescript
+- Example: Golang WASM and JS interoperating over a custom bridge.
+  - https://github.com/tmc/goloz
+  - GRPC && GRPC-Web as the Client to Server transport. 
+  - GRPC-Web Client is compiled to Goalng WASM use web sockets thanks to the custom GRPC-Web implemenation that uses nhooyr.io/websocket
+  - GRPC Client can still use tcp. 
+    - Libs:
+      - https://github.com/tmc/grpc-websocket-proxy
 
-TODO: Add nats.mk to **_make** for easy manaement of nats.
 
-https://github.com/ripienaar/nats-roundtripper provides http proxy
+--- 
 
-https://github.com/9glt/go-websockets-to-tcp-proxy provides Websockets proxy
+2. Typescript and Golang ( Non WASM ) for Desktop and Mobiles Webviews
+
+- So you can reuse the same typescript GUI on not just Web, but also Mobile and Desktop. Its essentially like the cordova concept ( originally from Adobe if i recall ) which you may know of.
+
+
+- For Desktop and Mobile, https://github.com/Inkeliz/gowebview provides the runtime suport. 
+- A Bus between the Golang and Webview is needed.
+
+---
+
+3. Golang GUI ( no js aspects ) utilising GIO. 
+
+- GIO is 100% golang and compiles for Web, Mobile, Desktop and Apple tv.
+- It also compiles on Mobile to shared object, and so is able to be included in a tranditionl IOS or Android GUI.
+- It has Material Design widgets. 
+- It has Native and Web support using https://github.com/gioui/gio-x, for things like Notifications, but also:
+  - hyperlinks: https://github.com/Inkeliz/giohyperlink 
+  - storage: https://github.com/Inkeliz/giostorage
+  - credentials: https://github.com/Inkeliz/giocredentials
+- spec that highlights this: https://github.com/gedw99/gio-proposals/blob/main/modularity/README.md#bus is a very short description of it. It quite old too.
+- Bus that uses NATS for Client ( web or non web) to Server is here:
+  - Golang WASM client: https://github.com/matrix-org/dendrite/blob/master/cmd/dendritejs/main.go
+  - Golang Server: https://github.com/matrix-org/dendrite/blob/master/cmd/dendrite-monolith-server/main.go
+
+3. Server to Server computation using WASI and a NATS bus
+- Hooking up the GUI ( WASM and Mobile and Desktop ) with the Server ( WASI )
+- Example of aspects of that : https://github.com/suborbital/sat/blob/main/go.mod
+  - It uses NATS Jetstream for WASI to WASI.
 
 
 
-## GIO WebView
 
-We need to use a webview if we want to open the Caddy Potal Auth from the GIO GUI Web, Desktop and Mobile.
 
-https://github.com/Inkeliz will do this. 
-- It does not have full support for Mac and IOS yet.  The include for Mac is there at https://github.com/Inkeliz/gowebview/blob/master/libs/libwebview.dylib, but no main loader yet for it.
+
+
+
 
 
