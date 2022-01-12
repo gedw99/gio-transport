@@ -2,26 +2,52 @@
 
 This is an exploration of ways we can create reusable transports for gio ( golang gui ) and non golang gui with Golang Server infrastructure.
 
-
-Transport and Bus are heavily related because as highlighed below we need to run anywhere which leads to needing to send messages inside, across and between process boundaries. 
-
 The initial proposal is here: https://github.com/gedw99/gio-proposals/blob/e1669bda78d4147dea6ad28a521d94f12e6dc62d/modularity/README.md#bus
 
 
-## Problem space.
+Transport and Bus are related because we need the transport data between GUI Windows, Web proceses and Servers.... Its a big area :)
 
-A GUI system wants to be fast and as such it needs to not get blocked by calls to the IO computation.
+## Problem space
+
+GIO supports Web, Desktop, Mobile and Apple TV, and so we want to support all these compile targets, and yet provide a common way to do it.
+
+GIO is a GUI system and in all GUI systems you need to not block the rendering, and so you need a concept of Foregrond and Backgrond processing with the one process. Background should do all IO and Computation, sending data to the Forground using chunky ( as chunky as posible ) IO patterns.
+
+### Web
 
 Golang routines and TinyGo ( via LLVM ) compilation dont work, because  WASM threading is not mature enough to parse golang coroutines into WASM threads. So i personally feel that a formal foreground and background ( web workers and or service workers ) is the required solution and hence why a BUS is required. 
 
+### NON Web ( Desktop and Mobile)
 
-GIO supports Web, Desktop, Mobile and Apple TV.  This Web Workers pattern, if formalsied into a API,  can be reused for Web and Non Web ( Desktop and Mobile ) GUI. Thus providing Developers a runtime agnostic system.
+Golang routines work well, and so we dont really need a Bus as such. 
+
+However, there are some exampples emerging where it might be relevant which i link to below.
+
+GIO Desktop supports many windows and tabs, and we need to transport data between those windows.
+- Example of this: https://git.sr.ht/~gioverse/skel
+  - works on Desktop and Mobile
+  - works on Web, however does not quite work properly
+
+GIO Mobile might need to also transport data between background and foreground. 
+- Example: https://github.com/gioui/gio/pull/67
+- Issue chat: https://lists.sr.ht/~eliasnaur/gio/%3C5ba972f53afe95ad9dc42ba0d1798551%40riseup.net%3E
+
+
+
+### Bus is a global problem space
+
+Transports and Bus are heavily related to each other because as highlighed below we need to run anywhere which leads to needing to send messages inside, across and between process boundaries. 
+
 
 Current state of Art is git.sr.ht/~gioverse/skel, whcih provides a scheduler.
 - Example: https://github.com/npillmayer/giocomp
   - https://github.com/npillmayer/giocomp/blob/main/components/comp.go#L9 is a reusable Component type.
 
 ## Solution
+
+The Web Workers pattern, if formalised into an API, can be reused for Web and Non Web ( Desktop and Mobile ) GUI. Thus providing Developers a runtime agnostic system.
+
+It may even be possible to use it for Server <--> Server and Server <--> Client, since the Service worker pattern is a proxy pattern.
 
 A Type structure is needed to describe the Messages and API.
 
